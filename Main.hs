@@ -22,6 +22,7 @@ import Data.Constraint
 import Data.Proxy
 import Data.Foldable
 import Prelude hiding (concat, sum, foldr)
+--import Debug.Trace
 
 -- Tic Tac Toe
 
@@ -97,6 +98,10 @@ instance Show (Trees n) where
 singleT :: Move -> MoveTree One
 singleT mv = Fan $ (mv, Leaf) :+ NilT
 
+headT :: MoveTree (S n) -> Maybe (Move)
+headT (Fan ((mv, t) :+ NilT)) = Just mv
+headT _ = Nothing
+
 tailT :: MoveTree n -> Maybe (MoveTree n)
 tailT (Fan ((_, Leaf) :+ NilT)) = Just Leaf
 tailT (Fan ((_, t) :+ NilT)) = do
@@ -115,6 +120,10 @@ getT n (Fan ((_, t) :+ NilT)) = do
     mv <- getMove t
     tl <- tailT t
     getT (n - 1) $ Fan ((mv, tl) :+ NilT)
+
+lengthT :: MoveTree n -> Int
+lengthT (Fan ((mv, Leaf) :+ NilT)) = 1
+lengthT (Fan ((mv, t) :+ NilT)) = 1 + lengthT t
 
 mapT :: (forall k. (Move, MoveTree k) -> (Move, MoveTree k)) -> MoveTree n -> MoveTree n
 mapT _ Leaf = Leaf
@@ -253,13 +262,15 @@ tryMove game move =
 tryAll :: MoveTree n -> Player -> MoveTree (n * Nine)
 tryAll mt pl = compose mt $ replicateF (grade mt) (allMoves pl)
 
-makeMove :: TicTacToe -> Int -> (Score, TicTacToe, MoveTree One)
-makeMove game n = 
+makeMove :: TicTacToe -> (Score, TicTacToe, MoveTree One)
+makeMove game =
     let moves = tryAll (tryAll Leaf Circle) Cross
         evals = runW game moves
         (score, branch) = bestMove evals
         games = duplicate game
-        Just mv = getT n branch -- cannot fail!
+        (_, branch0) = extract game
+        -- The new move is past the current branch
+        Just mv = getT (lengthT branch0) branch -- cannot fail!
         game' = headV $ runW games mv
     in (score, game', mv)
 
@@ -282,8 +293,8 @@ bestMove (VCons ev evals) = go ev evals
         _ -> False
 
 -- get a user move, validate it, make a move
-play :: Board -> TicTacToe -> Int -> IO ()
-play board game n = do
+play :: Board -> TicTacToe -> IO ()
+play board game = do
     putStrLn $ show $ board
     ln <- getLine
     let (coords :: [Int]) = (fmap (\x -> x - 1) . fmap read . words) ln
@@ -294,7 +305,7 @@ play board game n = do
     case pos of
         Nothing -> do 
             putStrLn "Enter two numbers: x y coordinates 1..3 1..3"
-            play board game n
+            play board game
         Just (x, y) ->
             let userMove = singleT (Move Cross x y)
                 board' = set Cross x y board
@@ -305,23 +316,19 @@ play board game n = do
                   putStrLn $ show $ board'
               Bad -> do
                   putStrLn "Invalid move! Try again."
-                  play board game' n
+                  play board game'
               Good _ -> do
                   putStrLn $ show $ board'
-                  if n < 8
-                  then respond board' game' (n + 1)
-                  else putStrLn "It's a tie!"
+                  respond board' game'
 
-respond :: Board -> TicTacToe -> Int -> IO ()
-respond board game n = do
-    let (status, game', mt) = makeMove game n
+respond :: Board -> TicTacToe -> IO ()
+respond board game = do
+    let (status, game', mt) = makeMove game
         Just (Move pl x y) = getMove mt -- cannot fail!
         board' = set pl x y board
     case status of
       Good _ -> do
-        putStrLn "My move:"
-        putStrLn $ show $ board'
-        play board' game' (n + 1)
+        play board' game'
       Win -> do
         putStrLn "You lose!"
         putStrLn $ show $ board'
@@ -333,7 +340,7 @@ main = do
     putStrLn "Make your moves by entering x y coordinates 1..3 1..3, anything else to quit."
     let board = emptyBoard
         game = W $ eval board
-    play board game 0
+    play board game
 
 safeHead :: [a] -> Maybe a
 safeHead (x:_) = Just x
