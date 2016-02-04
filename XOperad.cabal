@@ -1,0 +1,35 @@
+name:                XOperad
+version:             0.1.0.0
+synopsis:            The implementation of tic-tac-toe using an operadic comonad
+description:         Please see README.md
+homepage:            http://github.com/BartoszMilewski/XOperad
+author:              Bartosz Milewski
+category:            game
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+  exposed-modules:     Forest
+                     , Matrix
+                     , Numbers
+                     , Operad
+                     , Vector
+  build-depends:       base >= 4.7 && < 5
+                     , comonad
+                     , constraints
+
+executable tic-tac-toe
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+  main-is:             Main.hs
+  build-depends:       base
+                     , XOperad
+                     , comonad
+                     , constraints
+
+source-repository head
+  type:     git
+  location: https://github.com/BartoszMilewski/XOperad
