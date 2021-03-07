@@ -8,7 +8,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverlappingInstances #-} -- for show
+{-# LANGUAGE NoStarIsType #-}
 
 import Numbers
 import Vector
@@ -39,7 +39,7 @@ instance Show Player where
 
 type Board = Matrix Three Three (Maybe Player)
 
-instance Show Board where
+instance {-# OVERLAPPING #-} Show Board where
     show = concat . fmap (\v -> ln v ++ "\n") . rows
       where
           ln  :: Show a => Vec n (Maybe a) -> String
@@ -166,7 +166,6 @@ instance Operad MoveTree where
                      (Fan trees) = (compose (Fan ts) mts2) -- Trees i2 <- (Trees m2 . Forest MoveTree i2 m2)
                  in (mv, tree) :+ trees
     compose (Fan NilT) Nil = Fan NilT
-    compose _ _ = error "compose!"
 
 instance Graded MoveTree where
     grade Leaf = SS SZ
@@ -184,7 +183,7 @@ data Score = Bad | Win | Lose | Good Int
 
 type Evaluation = (Score, MoveTree One)
 
-instance Show Evaluation where
+instance {-# OVERLAPPING #-} Show Evaluation where
     show (Bad, _) = "Bad\n"
     show (ev, mt) = show ev ++ ": " ++ show mt ++ "\n"
 

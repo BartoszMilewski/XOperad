@@ -5,6 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE NoStarIsType #-}
 {-# LANGUAGE UndecidableInstances #-} -- for multiplication
 
 module Numbers where
@@ -102,5 +103,3 @@ multDistrib _ _ = unsafeCoerce (Dict :: Dict (a ~ a))
 reifyNat :: Int -> (forall n. KnownNat n => Proxy n -> r) -> r
 reifyNat 0 k = k (Proxy :: Proxy Z)
 reifyNat n k = reifyNat (n - 1) $ \(Proxy :: Proxy n_1) -> k (Proxy :: Proxy (S n_1))
-
-

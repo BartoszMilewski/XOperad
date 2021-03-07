@@ -61,4 +61,3 @@ getDiagR (Matrix vv) = antidiag vv
     antidiag ::  Vec n (Vec n a) -> Vec n a
     antidiag (VCons (VCons a VNil) VNil) = singleV a
     antidiag (VCons v vs) = VCons (lastV v) (antidiag $ fmap initV vs)
-

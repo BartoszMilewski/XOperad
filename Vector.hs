@@ -36,7 +36,6 @@ anyV f = getAny . foldMap (Any . f)
 zipWithV :: (a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
 zipWithV f (VCons a as) (VCons b bs) = VCons (f a b) (zipWithV f as bs)
 zipWithV _ VNil VNil = VNil
-zipWithV _ _ _ = undefined -- can't happen
 
 headV :: Vec (S n) a -> a
 headV (VCons a _) = a
@@ -84,7 +83,6 @@ ixV (FinS fin_n) (_ `VCons` xs) = ixV fin_n xs
 atV :: a -> Fin n -> Vec n a -> Vec n a
 atV a FinZ (_ `VCons` as) = a `VCons` as
 atV b (FinS n) (a `VCons` as) = a `VCons` atV b n as
-atV _ FinZ _ = undefined
 
 instance Functor (Vec n) where
     fmap f (VCons a as) = VCons (f a) (fmap f as)
@@ -104,4 +102,3 @@ instance Traversable (Vec n) where
 
 transpose :: KnownNat m => Vec n (Vec m a) -> Vec m (Vec n a)
 transpose = sequenceA
-

@@ -4,11 +4,13 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE NoStarIsType #-}
 module Forest where
 
 import Numbers
 import Data.Proxy
 import Data.Constraint
+import Data.Kind
 
 -- f n : a tree with n branches (inputs)
 -- Forest f i o : a forest of o trees with total i branches
@@ -25,7 +27,7 @@ instance Show (Forest f n m) where
     show Nil = "."
     show (Cons _ fs) = "V" ++ ", " ++ show fs
 
-class Graded (f :: Nat -> *) where
+class Graded (f :: Nat -> Type) where
   grade :: f n -> SNat n
 
 inputs :: forall f n m. (forall k. f k -> SNat k) -> Forest f n m -> SNat n
@@ -43,4 +45,3 @@ splitForest SZ _ fs k = k (Nil, fs)
 splitForest (SS (sm :: SNat m_1)) sn (Cons (t :: f i1) (ts :: Forest f i2 (m_1 + n))) k =
     splitForest sm sn ts (\((m_frag :: Forest f i3 m_1), (n_frag :: Forest f i4 n)) ->
         case plusAssoc (Proxy :: Proxy i1) (Proxy :: Proxy i3) (Proxy :: Proxy i4) of Dict -> k (Cons t m_frag, n_frag))
-
